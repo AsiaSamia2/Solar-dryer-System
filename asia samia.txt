@@ -1,0 +1,120 @@
+#include <Servo.h>
+#include <LiquidCrystal.h>
+#include <DHT.h>
+
+Servo myservo;
+
+#define DHTPIN 2
+#define DHTTYPE DHT11
+
+int light;
+
+LiquidCrystal lcd = { 13, 12, 11, 10, 9, 8 };
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  // put your setup code here, to run once:
+  myservo.attach(3);
+  lcd.begin(20, 4);
+
+  pinMode(4, OUTPUT);
+  //pinMode(9, OUTPUT);
+
+  digitalWrite(4, LOW);
+  //digitalWrite(9, LOW);  
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("DESIGN AND IMPLEMENT");
+  lcd.setCursor(0, 1);
+  lcd.print("OF AUTOMATC SOLAR   ");
+  lcd.setCursor(0, 2);
+  lcd.print(" CROP DRYING SYSTEM.");
+  delay(4000);
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("LDR1=      LDR2=    ");
+  lcd.setCursor(0, 1);
+  lcd.print("TEMP=               ");
+  lcd.setCursor(0, 2);
+  lcd.print("MOIST:              ");
+
+  dht.begin();
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  int moist = 102 - (analogRead(A0) / 10);
+  int moist_ = map(moist, 0, 102, 0, 40);
+  int ldr1 = analogRead(A1) / 10;
+  int ldr2 = analogRead(A2) / 10;
+
+  light = ldr2 - ldr1;
+
+  if (light >= 0) {
+    int val = map(light, 0, 100, 95, 70);
+    myservo.write(val);
+  }
+
+  if (light < 0) {
+    int val = map(-(light), 0, 102, 95, 140);
+    myservo.write(val);
+  }
+
+  int h = dht.readHumidity();
+  // Read temperature as Celsius (the default)
+  int t = dht.readTemperature()+10;
+  // Read temperature as Fahrenheit (isFahrenheit = true)
+  float f = dht.readTemperature(true);
+
+
+  lcd.setCursor(5, 0);
+  lcd.print(ldr1);
+  lcd.print("  ");
+
+  lcd.setCursor(16, 0);
+  lcd.print(ldr2);
+  lcd.print(" ");
+
+  lcd.setCursor(5, 1);
+  lcd.print(t);
+  lcd.print("  ");
+
+  /*
+  lcd.setCursor(16, 1);
+  lcd.print(h);
+  lcd.print(" ");
+  */
+
+  lcd.setCursor(7, 2);
+  lcd.print(moist_);
+  lcd.print("  ");
+  delay(300);
+
+  if(t<=37)
+  {
+    digitalWrite(4, HIGH);
+  }
+
+  if(t>=44)
+  {
+    digitalWrite(4, LOW);
+  }
+
+  if(moist_<=16)
+  {
+    lcd.setCursor(0,3);
+    lcd.print("REMOVING THE CROPS!");
+  }
+
+  else if(moist_>16)
+  {
+    lcd.setCursor(0,3);
+    lcd.print("DRYING THE CROPS..");
+  }
+
+
+
+  
+}
